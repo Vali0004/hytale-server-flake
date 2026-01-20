@@ -191,13 +191,13 @@ in {
           patchline = mkOption {
             type = types.enum [
               "release"
-              "prerelease"
+              "pre-release"
             ];
             default = "release";
             description = ''
               The Hytale version patchline to follow.
             '';
-            example = "prerelease";
+            example = "pre-release";
           };
 
           version = mkOption {
