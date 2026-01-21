@@ -401,36 +401,55 @@ in {
           in ''
             set -eo pipefail
 
-            PATCHLINE=$1
+            CREDENTIALS_PATH="${cfg.credentialsPath}"
 
-            hytale-downloader() {
-              "${hytaleDownloader}" -skip-update-check -patchline "$PATCHLINE" -credentials-path "${cfg.credentialsPath}" "$@"
+            patchline=$1
+
+            hytale_downloader() {
+              "${hytaleDownloader}" \
+                -skip-update-check \
+                -patchline "$patchline" \
+                -credentials-path "$CREDENTIALS_PATH" \
+                "$@"
             }
 
-            if [ ! -e "${cfg.credentialsPath}" ]; then
+            request_auth() {
               auth_out="$(mktemp -up "$RUNTIME_DIRECTORY" auth.XXXXXX)"
               mkfifo "$auth_out"
               chmod 700 "$auth_out"
 
               # causes the downloader to request authentication
-              hytale-downloader -print-version > "$auth_out"
+              hytale_downloader -print-version > "$auth_out"
 
               rm "$auth_out"
+            }
+
+            try_hytale_downloader() {
+              if output="$(hytale_downloader "$@")"; then
+                echo "$output"
+              else
+                rm "$CREDENTIALS_PATH"
+                request_auth
+
+                hytale_downloader "$@"
+              fi
+            }
+
+            if [ ! -e "$CREDENTIALS_PATH" ]; then request_auth; fi
+
+            game_version="$(try_hytale_downloader -print-version)"
+            assets_dir="${cfg.assetsDir}/$patchline-$game_version"
+
+            if [ ! -d "$assets_dir" ]; then
+              download_dir=$(mktemp -d)
+              try_hytale_downloader -download-path "$download_dir/assets.zip"
+
+              mkdir -p "$assets_dir"
+              ${unzip} "$download_dir/assets.zip" -d "$assets_dir"
+              rm -r "$download_dir"
             fi
 
-            GAME_VERSION="$(hytale-downloader -print-version)"
-            ASSETS_DIR="${cfg.assetsDir}/$PATCHLINE-$GAME_VERSION"
-
-            if [ ! -d "$ASSETS_DIR" ]; then
-              DOWNLOAD_DIR=$(mktemp -d)
-              hytale-downloader -download-path "$DOWNLOAD_DIR/assets.zip"
-
-              mkdir -p "$ASSETS_DIR"
-              ${unzip} "$DOWNLOAD_DIR/assets.zip" -d "$ASSETS_DIR"
-              rm -r "$DOWNLOAD_DIR"
-            fi
-
-            ln -sf "$PATCHLINE-$GAME_VERSION" "${cfg.assetsDir}/$PATCHLINE"
+            ln -sf "$patchline-$game_version" "${cfg.assetsDir}/$patchline"
           '';
           scriptArgs = "%I";
           enableStrictShellChecks = true;
@@ -442,6 +461,8 @@ in {
 
             User = cfg.user;
             Group = cfg.group;
+            StandardOutput = "journal";
+            StandardError = "journal";
             RuntimeDirectory = "hytale-downloader";
             RuntimeDirectoryPreserve = false;
             RuntimeDirectoryMode = "700";
