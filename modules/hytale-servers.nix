@@ -418,7 +418,7 @@ in {
               auth_out="$(mktemp -up "$RUNTIME_DIRECTORY" auth.XXXXXX)"
               mkfifo "$auth_out"; chmod 700 "$auth_out"
 
-              # causes the downloader to request authentication
+              # cause the downloader to request authentication
               hytale_downloader -print-version > "$auth_out"
 
               rm "$auth_out"
