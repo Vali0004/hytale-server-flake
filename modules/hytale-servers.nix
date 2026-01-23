@@ -669,9 +669,6 @@ in {
               prev_file="$prev_dir/$file"
               target_file="$target_dir/$file"
 
-              echo "prev: $prev_file" >&2
-              echo "target: $target_file" >&2
-
               if cmp -s "$prev_file" "$target_file"; then rm -rf "$target_file"; fi
 
               # remove the directories that have been made empty unless it's the server data root
@@ -700,9 +697,6 @@ in {
             for file in "$@"; do
               src_file="$src_dir/$file"
               dst_file="$dst_dir/$file"
-
-              echo "src: $src_file" >&2
-              echo "dst: $dst_file" >&2
 
               if [ -L "$src_file" ]; then
                 if [ -e "$dst_file" ]; then
