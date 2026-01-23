@@ -445,7 +445,7 @@ in {
 
             if [ ! -d "$game_dir" ]; then
               download_dir=$(mktemp -d)
-              try_hytale_downloader -download-path "$download_dir/assets.zip"
+              hytale_downloader -download-path "$download_dir/assets.zip"
 
               mkdir -p "$game_dir"
               unzip "$download_dir/assets.zip" -d "$game_dir"
