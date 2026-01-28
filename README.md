@@ -35,7 +35,7 @@ A Nix flake that provides a module for configuring Hytale servers.
       foobar = {
         enable = true;
         listenAddress = "12.34.56.78";
-        port = "5520";
+        port = 5520;
         openFirewall = true;
         patchline = "release";
         #tmux.enable = true;
